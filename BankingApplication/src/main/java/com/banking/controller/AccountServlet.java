@@ -2,6 +2,7 @@ package com.banking.controller;
 
 import com.banking.model.Account;
 import com.banking.model.User;
+import com.banking.model.Beneficiary;
 import com.banking.service.AccountService;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -104,6 +105,10 @@ public class AccountServlet extends HttpServlet {
                 handleDeposit(request, response, user);
             } else if ("withdraw".equals(action)) {
                 handleWithdraw(request, response, user);
+            } else if ("addBeneficiary".equals(action)) {
+                handleAddBeneficiary(request, response, user);
+            } else if ("removeBeneficiary".equals(action)) {
+                handleRemoveBeneficiary(request, response, user);
             } else if ("delete".equals(action)) {
                 handleDeleteAccount(request, response, user);
             } else {
@@ -170,7 +175,16 @@ public class AccountServlet extends HttpServlet {
             transactionService.processFundTransfer(fromAccountId, toAccountId, amount, description);
             request.getSession().setAttribute("successMessage", "Fund transfer completed successfully!");
         } else {
-            request.getSession().setAttribute("errorMessage", "Fund transfer failed! Check balance and account details.");
+            // Check if it's due to minimum balance requirement
+            BigDecimal newBalance = fromAccount.getBalance().subtract(amount);
+            if (newBalance.compareTo(new BigDecimal("10000")) < 0) {
+                request.getSession().setAttribute("errorMessage", 
+                    "Transfer failed! Transferring ₹" + amount + " would leave your account below the minimum required balance of ₹10,000. " +
+                    "Current balance: ₹" + fromAccount.getBalance() + ". Maximum transferable: ₹" + 
+                    fromAccount.getBalance().subtract(new BigDecimal("10000")));
+            } else {
+                request.getSession().setAttribute("errorMessage", "Fund transfer failed! Check balance and account details.");
+            }
         }
         
         response.sendRedirect("account");
@@ -209,11 +223,21 @@ public class AccountServlet extends HttpServlet {
             response.sendRedirect("account");
             return;
         }
+        
         if (accountService.withdraw(accountId, amount)) {
             transactionService.recordWithdrawal(accountId, amount, description);
             request.getSession().setAttribute("successMessage", "Withdrawal successful!");
         } else {
-            request.getSession().setAttribute("errorMessage", "Withdrawal failed! Check balance.");
+            // Check if it's due to minimum balance requirement
+            BigDecimal newBalance = account.getBalance().subtract(amount);
+            if (newBalance.compareTo(new BigDecimal("10000")) < 0) {
+                request.getSession().setAttribute("errorMessage", 
+                    "Withdrawal failed! Withdrawing ₹" + amount + " would leave your account below the minimum required balance of ₹10,000. " +
+                    "Current balance: ₹" + account.getBalance() + ". Maximum withdrawable: ₹" + 
+                    account.getBalance().subtract(new BigDecimal("10000")));
+            } else {
+                request.getSession().setAttribute("errorMessage", "Withdrawal failed! Check balance.");
+            }
         }
         response.sendRedirect("account");
     }
@@ -248,6 +272,59 @@ public class AccountServlet extends HttpServlet {
             request.setAttribute("errorMessage", "System error occurred while deleting account");
         }
 
+        response.sendRedirect("account");
+    }
+
+    private void handleAddBeneficiary(HttpServletRequest request, HttpServletResponse response, User user) 
+            throws Exception {
+        String beneficiaryAccountNumber = request.getParameter("beneficiaryAccountNumber");
+        String nickname = request.getParameter("nickname");
+        
+        if (beneficiaryAccountNumber == null || beneficiaryAccountNumber.trim().isEmpty() ||
+            nickname == null || nickname.trim().isEmpty()) {
+            request.getSession().setAttribute("errorMessage", "Account number and nickname are required!");
+            response.sendRedirect("account");
+            return;
+        }
+        
+        // Create beneficiary object
+        Beneficiary beneficiary = new Beneficiary();
+        beneficiary.setOwnerUserId(user.getId());
+        beneficiary.setBeneficiaryAccountNumber(beneficiaryAccountNumber);
+        beneficiary.setNickname(nickname);
+        
+        BeneficiaryService beneficiaryService = new BeneficiaryService();
+        if (beneficiaryService.addBeneficiary(beneficiary)) {
+            request.getSession().setAttribute("successMessage", "Beneficiary added successfully!");
+        } else {
+            request.getSession().setAttribute("errorMessage", "Failed to add beneficiary. Account may not exist or already added.");
+        }
+        
+        response.sendRedirect("account");
+    }
+
+    private void handleRemoveBeneficiary(HttpServletRequest request, HttpServletResponse response, User user) 
+            throws Exception {
+        String beneficiaryId = request.getParameter("beneficiaryId");
+        
+        if (beneficiaryId == null || beneficiaryId.trim().isEmpty()) {
+            request.getSession().setAttribute("errorMessage", "Beneficiary ID is required!");
+            response.sendRedirect("account");
+            return;
+        }
+        
+        try {
+            int id = Integer.parseInt(beneficiaryId);
+            BeneficiaryService beneficiaryService = new BeneficiaryService();
+            if (beneficiaryService.removeBeneficiary(id, user.getId())) {
+                request.getSession().setAttribute("successMessage", "Beneficiary removed successfully!");
+            } else {
+                request.getSession().setAttribute("errorMessage", "Failed to remove beneficiary. It may not exist or you don't have permission.");
+            }
+        } catch (NumberFormatException e) {
+            request.getSession().setAttribute("errorMessage", "Invalid beneficiary ID");
+        }
+        
         response.sendRedirect("account");
     }
 }

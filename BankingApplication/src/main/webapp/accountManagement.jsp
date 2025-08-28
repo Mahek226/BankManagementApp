@@ -373,6 +373,85 @@
                 </c:otherwise>
             </c:choose>
         </div>
+
+        <!-- Beneficiary Management Section -->
+        <div class="section" id="beneficiaries">
+            <h3>Beneficiary Management</h3>
+            <div class="form-grid">
+                <!-- Add New Beneficiary -->
+                <div class="transfer-form">
+                    <h4>Add New Beneficiary</h4>
+                    <form action="account" method="post">
+                        <input type="hidden" name="action" value="addBeneficiary">
+                        <div class="transfer-grid">
+                            <div class="form-group">
+                                <label for="beneficiaryAccountNumber">Account Number</label>
+                                <input type="text" id="beneficiaryAccountNumber" name="beneficiaryAccountNumber" 
+                                       placeholder="Enter account number" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="nickname">Nickname</label>
+                                <input type="text" id="nickname" name="nickname" 
+                                       placeholder="e.g., John's Account" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn">Add Beneficiary</button>
+                    </form>
+                </div>
+
+                <!-- Remove Beneficiary -->
+                <div class="transfer-form">
+                    <h4>Remove Beneficiary</h4>
+                    <form action="account" method="post">
+                        <input type="hidden" name="action" value="removeBeneficiary">
+                        <div class="transfer-grid">
+                            <div class="form-group">
+                                <label for="removeBeneficiaryId">Select Beneficiary</label>
+                                <select id="removeBeneficiaryId" name="beneficiaryId" required>
+                                    <option value="">Choose beneficiary to remove...</option>
+                                    <c:forEach var="beneficiary" items="${beneficiaries}">
+                                        <option value="${beneficiary.id}">
+                                            ${beneficiary.nickname} - #${beneficiary.beneficiaryAccountNumber}
+                                        </option>
+                                    </c:forEach>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" 
+                                ${empty beneficiaries ? 'disabled' : ''}>Remove Beneficiary</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Current Beneficiaries List -->
+            <div class="transfer-form" style="margin-top: 20px;">
+                <h4>Current Beneficiaries</h4>
+                <c:choose>
+                    <c:when test="${empty beneficiaries}">
+                        <p style="text-align: center; color: #666;">No beneficiaries added yet.</p>
+                    </c:when>
+                    <c:otherwise>
+                        <div class="accounts-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+                            <c:forEach var="beneficiary" items="${beneficiaries}">
+                                <div class="account-card" style="background: linear-gradient(45deg, #4facfe, #00f2fe); color: white;">
+                                    <div class="account-header">
+                                        <span class="account-number">${beneficiary.nickname}</span>
+                                        <span class="account-type">Beneficiary</span>
+                                    </div>
+                                    <div class="account-balance" style="color: white;">
+                                        #${beneficiary.beneficiaryAccountNumber}
+                                    </div>
+                                    <div class="account-status" style="color: rgba(255,255,255,0.8);">
+                                        Added on: <fmt:formatDate value="${beneficiary.createdAt}" pattern="yyyy-MM-dd"/>
+                                    </div>
+                                </div>
+                            </c:forEach>
+                        </div>
+                    </c:otherwise>
+                </c:choose>
+            </div>
+        </div>
+
         <!-- Existing Accounts Section -->
         <div class="section">
             <h3>Your Accounts</h3>
@@ -491,7 +570,7 @@
                                     <span class="account-type">${account.accountType}</span>
                                 </div>
                                 <div class="account-balance">
-                                    $<fmt:formatNumber value="${account.balance}" pattern="#,##0.00"/>
+                                    ₹<fmt:formatNumber value="${account.balance}" pattern="#,##0.00"/>
                                 </div>
                                 <div class="account-status">
                                     Status: ${account.status}

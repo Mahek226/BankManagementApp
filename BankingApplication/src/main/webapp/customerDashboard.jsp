@@ -249,7 +249,7 @@
             <div class="dashboard-card">
                 <div class="card-icon">💰</div>
                 <h3 class="card-title">Fund Transfers</h3>
-                <p class="card-description">Transfer funds between accounts or to other customers securely.</p>
+                <p class="card-description">Transfer funds between accounts or to beneficiaries securely.</p>
                 <a href="account?view=transfer" class="card-btn">Transfer Funds</a>
             </div>
 
@@ -266,15 +266,47 @@
                 <p class="card-description">View detailed transaction history and statements for all your accounts.</p>
                 <a href="account?view=history" class="card-btn">View History</a>
             </div>
+
+            <div class="dashboard-card">
+                <div class="card-icon">👥</div>
+                <h3 class="card-title">Beneficiary Management</h3>
+                <p class="card-description">Add, remove, and manage beneficiaries for quick fund transfers.</p>
+                <a href="account#beneficiaries" class="card-btn">Manage Beneficiaries</a>
+            </div>
         </div>
 
         <div class="quick-actions">
             <h3>Quick Actions</h3>
-            <div class="action-buttons">
-                <a href="account?view=create" class="action-btn">Create New Account</a>
-                <a href="account" class="action-btn">Check Balance</a>
-                <a href="loan" class="action-btn">Loan Status</a>
-                <a href="profile" class="action-btn">Update Profile</a>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <a href="createAccount.jsp" class="action-btn">Create New Account</a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="deposit.jsp" class="action-btn">Deposit Funds</a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="withdraw.jsp" class="action-btn">Withdraw Funds</a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="transfer.jsp" class="action-btn">Transfer Funds</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3 mb-3">
+                    <a href="account" class="action-btn">Check Balance</a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="history.jsp" class="action-btn">Transaction History</a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="loan" class="action-btn">Loan Status</a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="profile" class="action-btn">Update Profile</a>
+                </div>
+                <div class="col-md-3 mb-3">
+                    <a href="account#beneficiaries" class="action-btn">Manage Beneficiaries</a>
+                </div>
             </div>
         </div>
     </div>

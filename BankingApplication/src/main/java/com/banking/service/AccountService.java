@@ -70,7 +70,12 @@ public class AccountService {
             return false; // Insufficient funds
         }
         
+        // Check if transfer would leave fromAccount below minimum balance of ₹10,000
         BigDecimal newFromBalance = fromAccount.getBalance().subtract(amount);
+        if (newFromBalance.compareTo(new BigDecimal("10000")) < 0) {
+            return false; // Would violate minimum balance requirement
+        }
+        
         BigDecimal newToBalance = toAccount.getBalance().add(amount);
         
         boolean fromUpdated = accountDAO.updateBalance(fromAccountId, newFromBalance);
@@ -103,7 +108,13 @@ public class AccountService {
         Account account = accountDAO.getAccountById(accountId);
         if (account == null) { return false; }
         if (account.getBalance().compareTo(amount) < 0) { return false; }
+        
+        // Check if withdrawal would leave account below minimum balance of ₹10,000
         BigDecimal newBalance = account.getBalance().subtract(amount);
+        if (newBalance.compareTo(new BigDecimal("10000")) < 0) {
+            return false; // Would violate minimum balance requirement
+        }
+        
         return accountDAO.updateBalance(accountId, newBalance);
     }
 }
