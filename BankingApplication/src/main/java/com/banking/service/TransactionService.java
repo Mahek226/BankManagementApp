@@ -3,6 +3,7 @@ package com.banking.service;
 import com.banking.dao.TransactionDAO;
 import com.banking.dao.AccountDAO;
 import com.banking.model.Transaction;
+import com.banking.model.TransactionView;
 import java.sql.SQLException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -33,6 +34,11 @@ public class TransactionService {
     
     public List<Transaction> getAllTransactions() throws SQLException {
         return transactionDAO.getAllTransactions();
+    }
+
+    public List<TransactionView> getTransactionsDetailedByUser(int userId) throws SQLException {
+        if (userId <= 0) return null;
+        return transactionDAO.getTransactionsDetailedByUser(userId);
     }
     
     public boolean updateTransactionStatus(int transactionId, String status) throws SQLException {

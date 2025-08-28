@@ -274,16 +274,13 @@
     <div class="container">
         <h1 class="page-title">Account Management</h1>
         
-        <c:if test="${not empty successMessage}">
-            <div class="message success-message">
-                ${successMessage}
-            </div>
+        <c:if test="${not empty sessionScope.successMessage}">
+            <div class="message success-message">${sessionScope.successMessage}</div>
+            <c:remove var="successMessage" scope="session"/>
         </c:if>
-        
-        <c:if test="${not empty errorMessage}">
-            <div class="message error-message">
-                ${errorMessage}
-            </div>
+        <c:if test="${not empty sessionScope.errorMessage}">
+            <div class="message error-message">${sessionScope.errorMessage}</div>
+            <c:remove var="errorMessage" scope="session"/>
         </c:if>
 
         <!-- Create New Account Section -->
@@ -311,6 +308,52 @@
             </form>
         </div>
 
+        <!-- Transaction History & Analytics -->
+        <div class="section">
+            <h3>Transaction History</h3>
+            <c:choose>
+                <c:when test="${empty transactionsDetailed}">
+                    <p>No transactions yet.</p>
+                </c:when>
+                <c:otherwise>
+                    <div style="overflow-x:auto">
+                        <table class="users-table" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Amount (₹)</th>
+                                    <th>Status</th>
+                                    <th>Description</th>
+                                    <th>From (Acc No / Type)</th>
+                                    <th>To (Acc No / Type)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <c:forEach var="t" items="${transactionsDetailed}">
+                                    <tr>
+                                        <td>${t.id}</td>
+                                        <td><fmt:formatDate value="${t.transactionDate}" pattern="yyyy-MM-dd HH:mm"/></td>
+                                        <td>${t.transactionType}</td>
+                                        <td><fmt:formatNumber value="${t.amount}" pattern=",##0.00"/></td>
+                                        <td>${t.status}</td>
+                                        <td>${t.description}</td>
+                                        <td>${t.fromAccountNumber} / ${t.fromAccountType}</td>
+                                        <td>${t.toAccountNumber} / ${t.toAccountType}</td>
+                                    </tr>
+                                </c:forEach>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top:20px">
+                        <h3>Transaction Analytics</h3>
+                        <canvas id="custTxByType" style="max-height:280px"></canvas>
+                    </div>
+                </c:otherwise>
+            </c:choose>
+        </div>
         <!-- Existing Accounts Section -->
         <div class="section">
             <h3>Your Accounts</h3>
@@ -327,12 +370,52 @@
                                     <span class="account-type">${account.accountType}</span>
                                 </div>
                                 <div class="account-balance">
-                                    $<fmt:formatNumber value="${account.balance}" pattern="#,##0.00"/>
+                                    ₹<fmt:formatNumber value="${account.balance}" pattern="#,##0.00"/>
                                 </div>
                                 <div class="account-status">
                                     Status: ${account.status}
                                 </div>
                                 
+                                <!-- Deposit Form -->
+                                <div class="transfer-form">
+                                    <h4>Deposit</h4>
+                                    <form action="account" method="post">
+                                        <input type="hidden" name="action" value="deposit">
+                                        <input type="hidden" name="accountId" value="${account.id}">
+                                        <div class="transfer-grid">
+                                            <div class="form-group">
+                                                <label>Amount (₹)</label>
+                                                <input type="number" name="amount" min="0.01" step="0.01" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Description</label>
+                                                <input type="text" name="description" placeholder="Deposit note">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn" style="width:100%">Deposit</button>
+                                    </form>
+                                </div>
+
+                                <!-- Withdraw Form -->
+                                <div class="transfer-form">
+                                    <h4>Withdraw</h4>
+                                    <form action="account" method="post">
+                                        <input type="hidden" name="action" value="withdraw">
+                                        <input type="hidden" name="accountId" value="${account.id}">
+                                        <div class="transfer-grid">
+                                            <div class="form-group">
+                                                <label>Amount (₹)</label>
+                                                <input type="number" name="amount" min="0.01" step="0.01" required>
+                                            </div>
+                                            <div class="form-group">
+                                                <label>Description</label>
+                                                <input type="text" name="description" placeholder="Withdrawal note">
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-secondary" style="width:100%">Withdraw</button>
+                                    </form>
+                                </div>
+
                                 <!-- Transfer Form -->
                                 <div class="transfer-form">
                                     <h4>Transfer Funds</h4>
@@ -341,11 +424,20 @@
                                         <input type="hidden" name="fromAccountId" value="${account.id}">
                                         <div class="transfer-grid">
                                             <div class="form-group">
-                                                <label for="toAccountId">To Account ID</label>
-                                                <input type="number" name="toAccountId" required>
+                                                <label for="toAccountId">To Account ID (or choose Beneficiary)</label>
+                                                <input type="number" name="toAccountId" placeholder="Enter Account ID">
+                                                <div style="margin-top:8px">
+                                                    <label>Beneficiary</label>
+                                                    <select onchange="if(this.value){this.form.toAccountId.value=this.value.split(':')[1]}" style="width:100%;padding:8px;border:2px solid #e1e5e9;border-radius:8px">
+                                                        <option value="">Select beneficiary</option>
+                                                        <c:forEach var="b" items="${beneficiaries}">
+                                                            <option value="${b.beneficiaryUserId}:${b.beneficiaryAccountId}">${b.nickname} (Acc ${b.beneficiaryAccountId})</option>
+                                                        </c:forEach>
+                                                    </select>
+                                                </div>
                                             </div>
                                             <div class="form-group">
-                                                <label for="amount">Amount</label>
+                                                <label for="amount">Amount (₹)</label>
                                                 <input type="number" name="amount" min="0.01" step="0.01" required>
                                             </div>
                                             <div class="form-group">
@@ -449,6 +541,27 @@
                 }
             });
         });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function(){
+            var data = [
+                <c:forEach var="t" items="${transactionsDetailed}">
+                {type:'${t.transactionType}', amount: parseFloat('${t.amount}')},
+                </c:forEach>
+            ];
+            var totals = {};
+            data.forEach(function(tx){
+                if(!tx || isNaN(tx.amount)) return;
+                totals[tx.type] = (totals[tx.type]||0) + tx.amount;
+            });
+            var labels = Object.keys(totals);
+            var values = labels.map(function(k){return Number(totals[k].toFixed(2));});
+            var ctx = document.getElementById('custTxByType');
+            if (ctx && labels.length) {
+                new Chart(ctx, {type:'doughnut', data:{labels:labels,datasets:[{data:values,backgroundColor:['#667eea','#764ba2','#28a745','#dc3545','#ffc107']}]}, options:{responsive:true}});
+            }
+        })();
     </script>
 </body>
 </html>

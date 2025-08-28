@@ -13,6 +13,8 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 import com.banking.service.TransactionService;
+import com.banking.model.TransactionView;
+import com.banking.service.BeneficiaryService;
 
 @WebServlet("/account")
 public class AccountServlet extends HttpServlet {
@@ -40,6 +42,12 @@ public class AccountServlet extends HttpServlet {
         try {
             List<Account> accounts = accountService.getAccountsByUserId(userId);
             request.setAttribute("accounts", accounts);
+            // Load detailed transactions for analytics and history
+            TransactionService ts = new TransactionService();
+            request.setAttribute("transactionsDetailed", ts.getTransactionsDetailedByUser(userId));
+            // Load beneficiaries for transfer convenience
+            BeneficiaryService bs = new BeneficiaryService();
+            request.setAttribute("beneficiaries", bs.getBeneficiariesByOwner(userId));
             
             // If admin, also load all accounts for management
             if ("ADMIN".equals(user.getRole())) {

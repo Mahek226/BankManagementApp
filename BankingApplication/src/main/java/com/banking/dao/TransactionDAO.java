@@ -1,6 +1,7 @@
 package com.banking.dao;
 
 import com.banking.model.Transaction;
+import com.banking.model.TransactionView;
 import com.banking.util.DatabaseUtil;
 import java.sql.*;
 import java.math.BigDecimal;
@@ -76,6 +77,38 @@ public class TransactionDAO {
             }
         }
         return transactions;
+    }
+
+    public List<TransactionView> getTransactionsDetailedByUser(int userId) throws SQLException {
+        List<TransactionView> list = new ArrayList<>();
+        String sql = "SELECT t.*, fa.account_number AS from_acc_no, fa.account_type AS from_acc_type, ta.account_number AS to_acc_no, ta.account_type AS to_acc_type " +
+                "FROM transactions t " +
+                "JOIN accounts fa ON t.from_account_id = fa.id " +
+                "JOIN accounts ta ON t.to_account_id = ta.id " +
+                "WHERE fa.user_id = ? OR ta.user_id = ? ORDER BY t.transaction_date DESC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ps.setInt(2, userId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                TransactionView v = new TransactionView();
+                v.setId(rs.getInt("id"));
+                v.setTransactionType(rs.getString("transaction_type"));
+                v.setAmount(rs.getBigDecimal("amount"));
+                v.setDescription(rs.getString("description"));
+                v.setStatus(rs.getString("status"));
+                v.setTransactionDate(rs.getTimestamp("transaction_date"));
+                v.setFromAccountId(rs.getInt("from_account_id"));
+                v.setFromAccountNumber(rs.getString("from_acc_no"));
+                v.setFromAccountType(rs.getString("from_acc_type"));
+                v.setToAccountId(rs.getInt("to_account_id"));
+                v.setToAccountNumber(rs.getString("to_acc_no"));
+                v.setToAccountType(rs.getString("to_acc_type"));
+                list.add(v);
+            }
+        }
+        return list;
     }
     
     public boolean updateTransactionStatus(int transactionId, String status) throws SQLException {
