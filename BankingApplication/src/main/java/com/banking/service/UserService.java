@@ -23,6 +23,10 @@ public class UserService {
     public List<User> getAllUsers() throws SQLException {
         return userDAO.getAllUsers();
     }
+
+    public List<User> getCustomersOnly() throws SQLException {
+        return userDAO.getUsersByRole("CUSTOMER");
+    }
     
     public User getUserById(int id) throws SQLException {
         return userDAO.getUserById(id);

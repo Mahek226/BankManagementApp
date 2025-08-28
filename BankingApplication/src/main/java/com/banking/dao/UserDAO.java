@@ -61,6 +61,32 @@ public class UserDAO {
         }
         return users;
     }
+
+    public List<User> getUsersByRole(String role) throws SQLException {
+        List<User> users = new ArrayList<>();
+        String query = "SELECT * FROM users WHERE role = ? ORDER BY id";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, role);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                User user = new User(
+                    rs.getInt("id"),
+                    rs.getString("username"),
+                    rs.getString("password"),
+                    rs.getString("role"),
+                    rs.getString("full_name"),
+                    rs.getString("email"),
+                    rs.getString("phone"),
+                    rs.getString("address"),
+                    rs.getString("status"),
+                    rs.getString("rejection_reason")
+                );
+                users.add(user);
+            }
+        }
+        return users;
+    }
     
     public User getUserById(int id) throws SQLException {
         String query = "SELECT * FROM users WHERE id = ?";

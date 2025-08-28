@@ -36,7 +36,7 @@ public class UserManagementServlet extends HttpServlet {
         }
         
         try {
-            List<User> users = userService.getAllUsers();
+            List<User> users = userService.getCustomersOnly();
             request.setAttribute("users", users);
             request.getRequestDispatcher("userManagement.jsp").forward(request, response);
         } catch (Exception e) {

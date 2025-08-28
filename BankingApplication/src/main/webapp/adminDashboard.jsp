@@ -1,5 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -277,20 +278,19 @@
             <h3>System Overview</h3>
             <div class="stats-grid">
                 <div class="stat-item">
-                    <div class="stat-number">150+</div>
+                    <div class="stat-number">${totalCustomers}</div>
                     <div class="stat-label">Total Customers</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">25</div>
-                    <div class="stat-label">Pending Loans</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-number">500+</div>
+                    <div class="stat-number">${totalAccounts}</div>
                     <div class="stat-label">Active Accounts</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number">1000+</div>
-                    <div class="stat-label">Transactions Today</div>
+                    <div class="stat-number">${fn:length(transactions)}</div>
+                    <div class="stat-label">Total Transactions</div>
+                </div>
+                <div class="stat-item">
+                    <a href="reports.csv" class="card-btn">Download Transactions CSV</a>
                 </div>
             </div>
         </div>
@@ -321,7 +321,7 @@
                 <div class="card-icon">📊</div>
                 <h3 class="card-title">Reports & Analytics</h3>
                 <p class="card-description">Generate reports, view transaction analytics, and monitor system performance.</p>
-                <a href="#" class="card-btn">View Reports</a>
+                <a href="reports" class="card-btn">View Reports</a>
             </div>
 
             <div class="dashboard-card">
@@ -337,8 +337,22 @@
             <div class="action-buttons">
                 <a href="userManagement" class="action-btn">Add New Customer</a>
                 <a href="loan" class="action-btn">View Pending Loans</a>
-                <a href="#" class="action-btn">Generate Reports</a>
+                <a href="reports" class="action-btn">View Reports</a>
                 <a href="#" class="action-btn">System Backup</a>
+            </div>
+        </div>
+
+        <div class="stats-section" style="margin-top:20px">
+            <h3>Analytics</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:15px">
+                <div style="background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05)">
+                    <h4 style="margin-bottom:10px;color:#333">Transactions by Type</h4>
+                    <canvas id="txByType"></canvas>
+                </div>
+                <div style="background:#fff;padding:20px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.05)">
+                    <h4 style="margin-bottom:10px;color:#333">Transactions Over Time</h4>
+                    <canvas id="txOverTime"></canvas>
+                </div>
             </div>
         </div>
     </div>
@@ -351,6 +365,55 @@
                 message.style.display = 'none';
             });
         }, 5000);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        (function(){
+            // Build data arrays from JSTL-provided transactions
+            var transactions = [
+                <c:forEach var="t" items="${transactions}">
+                {type:'${t.transactionType}', amount: parseFloat('${t.amount}'), date:'${t.transactionDate}'}<c:if test="${!fn:contains(t, '___end___')}">,</c:if>
+                </c:forEach>
+            ];
+
+            // Aggregate by type
+            var typeTotals = {};
+            transactions.forEach(function(tx){
+                var key = tx.type || 'OTHER';
+                typeTotals[key] = (typeTotals[key]||0) + (isNaN(tx.amount)?0:tx.amount);
+            });
+            var typeLabels = Object.keys(typeTotals);
+            var typeData = typeLabels.map(function(k){return Number(typeTotals[k].toFixed(2));});
+
+            var ctx1 = document.getElementById('txByType');
+            if (ctx1) {
+                new Chart(ctx1, {
+                    type: 'bar',
+                    data: { labels: typeLabels, datasets: [{ label: '₹ Amount', data: typeData, backgroundColor: '#667eea' }] },
+                    options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
+
+            // Aggregate by month (YYYY-MM)
+            var monthTotals = {};
+            transactions.forEach(function(tx){
+                var d = new Date(tx.date);
+                if (isNaN(d)) return;
+                var key = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+                monthTotals[key] = (monthTotals[key]||0) + (isNaN(tx.amount)?0:tx.amount);
+            });
+            var months = Object.keys(monthTotals).sort();
+            var monthData = months.map(function(k){return Number(monthTotals[k].toFixed(2));});
+
+            var ctx2 = document.getElementById('txOverTime');
+            if (ctx2) {
+                new Chart(ctx2, {
+                    type: 'line',
+                    data: { labels: months, datasets: [{ label: '₹ Amount', data: monthData, borderColor: '#764ba2', backgroundColor: 'rgba(118,75,162,0.2)', tension: 0.3 }] },
+                    options: { responsive: true, plugins: { legend: { display: true } }, scales: { y: { beginAtZero: true } } }
+                });
+            }
+        })();
     </script>
 </body>
 </html>

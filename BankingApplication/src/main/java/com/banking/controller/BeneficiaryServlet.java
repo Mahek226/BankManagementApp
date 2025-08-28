@@ -30,10 +30,10 @@ public class BeneficiaryServlet extends HttpServlet {
         User user = (User) session.getAttribute("user");
         try {
             request.setAttribute("beneficiaries", beneficiaryService.getBeneficiariesByOwner(user.getId()));
-            request.getRequestDispatcher("customerDashboard.jsp").forward(request, response);
+            request.getRequestDispatcher("beneficiaries.jsp").forward(request, response);
         } catch (Exception e) {
             request.setAttribute("errorMessage", "Failed to load beneficiaries");
-            request.getRequestDispatcher("customerDashboard.jsp").forward(request, response);
+            request.getRequestDispatcher("beneficiaries.jsp").forward(request, response);
         }
     }
 
