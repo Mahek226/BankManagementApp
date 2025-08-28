@@ -52,6 +52,8 @@ public class LoginServlet extends HttpServlet {
                 session.setAttribute("user", user);
                 session.setAttribute("userId", user.getId());
                 session.setAttribute("userRole", user.getRole());
+                // Session timeout: 15 minutes
+                session.setMaxInactiveInterval(15 * 60);
                 
                 if ("ADMIN".equals(user.getRole())) {
                     response.sendRedirect("adminDashboard.jsp");

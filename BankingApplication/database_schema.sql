@@ -136,3 +136,16 @@ JOIN accounts ta ON t.to_account_id = ta.id
 JOIN users u1 ON fa.user_id = u1.id
 JOIN users u2 ON ta.user_id = u2.id
 ORDER BY t.transaction_date DESC;
+
+-- Beneficiaries table
+CREATE TABLE IF NOT EXISTS beneficiaries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    owner_user_id INT NOT NULL,
+    beneficiary_user_id INT NOT NULL,
+    beneficiary_account_id INT NOT NULL,
+    nickname VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (beneficiary_user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (beneficiary_account_id) REFERENCES accounts(id) ON DELETE CASCADE
+);

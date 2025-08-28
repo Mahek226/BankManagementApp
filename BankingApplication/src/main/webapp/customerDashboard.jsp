@@ -219,16 +219,18 @@
     </div>
 
     <div class="container">
-        <c:if test="${not empty successMessage}">
+        <c:if test="${not empty sessionScope.successMessage}">
             <div class="message success-message">
-                ${successMessage}
+                ${sessionScope.successMessage}
             </div>
+            <c:remove var="successMessage" scope="session"/>
         </c:if>
         
-        <c:if test="${not empty errorMessage}">
+        <c:if test="${not empty sessionScope.errorMessage}">
             <div class="message error-message">
-                ${errorMessage}
+                ${sessionScope.errorMessage}
             </div>
+            <c:remove var="errorMessage" scope="session"/>
         </c:if>
 
         <div class="welcome-section">

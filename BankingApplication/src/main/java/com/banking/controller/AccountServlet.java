@@ -12,14 +12,17 @@ import javax.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import com.banking.service.TransactionService;
 
 @WebServlet("/account")
 public class AccountServlet extends HttpServlet {
     private AccountService accountService;
+    private TransactionService transactionService;
     
     @Override
     public void init() throws ServletException {
         accountService = new AccountService();
+        transactionService = new TransactionService();
     }
     
     @Override
@@ -72,6 +75,10 @@ public class AccountServlet extends HttpServlet {
                 handleCreateAccount(request, response, user);
             } else if ("transfer".equals(action)) {
                 handleFundTransfer(request, response, user);
+            } else if ("deposit".equals(action)) {
+                handleDeposit(request, response, user);
+            } else if ("withdraw".equals(action)) {
+                handleWithdraw(request, response, user);
             } else if ("delete".equals(action)) {
                 handleDeleteAccount(request, response, user);
             } else {
@@ -88,8 +95,9 @@ public class AccountServlet extends HttpServlet {
         String accountType = request.getParameter("accountType");
         BigDecimal initialBalance = new BigDecimal(request.getParameter("initialBalance"));
         
-        if (initialBalance.compareTo(BigDecimal.ZERO) < 0) {
-            request.setAttribute("errorMessage", "Initial balance cannot be negative!");
+        // Enforce min initial balance 10000 INR
+        if (initialBalance.compareTo(new BigDecimal("10000")) < 0) {
+            request.setAttribute("errorMessage", "Initial balance must be at least ₹10,000.");
             response.sendRedirect("account");
             return;
         }
@@ -106,7 +114,7 @@ public class AccountServlet extends HttpServlet {
         if (accountService.createAccount(newAccount)) {
             request.setAttribute("successMessage", "Account created successfully! Account Number: " + accountNumber);
         } else {
-            request.setAttribute("errorMessage", "Failed to create account!");
+            request.setAttribute("errorMessage", "Failed to create account! You may already have this account type.");
         }
         
         response.sendRedirect("account");
@@ -134,11 +142,54 @@ public class AccountServlet extends HttpServlet {
         }
         
         if (accountService.transferFunds(fromAccountId, toAccountId, amount)) {
-            request.setAttribute("successMessage", "Fund transfer completed successfully!");
+            transactionService.processFundTransfer(fromAccountId, toAccountId, amount, description);
+            request.getSession().setAttribute("successMessage", "Fund transfer completed successfully!");
         } else {
-            request.setAttribute("errorMessage", "Fund transfer failed! Check balance and account details.");
+            request.getSession().setAttribute("errorMessage", "Fund transfer failed! Check balance and account details.");
         }
         
+        response.sendRedirect("account");
+    }
+
+    private void handleDeposit(HttpServletRequest request, HttpServletResponse response, User user)
+            throws Exception {
+        int accountId = Integer.parseInt(request.getParameter("accountId"));
+        BigDecimal amount = new BigDecimal(request.getParameter("amount"));
+        String description = request.getParameter("description");
+
+        Account account = accountService.getAccountById(accountId);
+        if (account == null || account.getUserId() != user.getId()) {
+            request.setAttribute("errorMessage", "Invalid account!");
+            response.sendRedirect("account");
+            return;
+        }
+        if (accountService.deposit(accountId, amount)) {
+            transactionService.recordDeposit(accountId, amount, description);
+            request.getSession().setAttribute("successMessage", "Deposit successful!");
+        } else {
+            request.getSession().setAttribute("errorMessage", "Deposit failed!");
+        }
+        response.sendRedirect("account");
+    }
+
+    private void handleWithdraw(HttpServletRequest request, HttpServletResponse response, User user)
+            throws Exception {
+        int accountId = Integer.parseInt(request.getParameter("accountId"));
+        BigDecimal amount = new BigDecimal(request.getParameter("amount"));
+        String description = request.getParameter("description");
+
+        Account account = accountService.getAccountById(accountId);
+        if (account == null || account.getUserId() != user.getId()) {
+            request.setAttribute("errorMessage", "Invalid account!");
+            response.sendRedirect("account");
+            return;
+        }
+        if (accountService.withdraw(accountId, amount)) {
+            transactionService.recordWithdrawal(accountId, amount, description);
+            request.getSession().setAttribute("successMessage", "Withdrawal successful!");
+        } else {
+            request.getSession().setAttribute("errorMessage", "Withdrawal failed! Check balance.");
+        }
         response.sendRedirect("account");
     }
 

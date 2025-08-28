@@ -58,4 +58,28 @@ public class TransactionService {
         
         return transactionDAO.createTransaction(transaction);
     }
+
+    public boolean recordDeposit(int toAccountId, BigDecimal amount, String description) throws SQLException {
+        if (toAccountId <= 0 || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) { return false; }
+        Transaction t = new Transaction();
+        t.setFromAccountId(toAccountId);
+        t.setToAccountId(toAccountId);
+        t.setTransactionType("DEPOSIT");
+        t.setAmount(amount);
+        t.setDescription(description);
+        t.setStatus("COMPLETED");
+        return transactionDAO.createTransaction(t);
+    }
+
+    public boolean recordWithdrawal(int fromAccountId, BigDecimal amount, String description) throws SQLException {
+        if (fromAccountId <= 0 || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) { return false; }
+        Transaction t = new Transaction();
+        t.setFromAccountId(fromAccountId);
+        t.setToAccountId(fromAccountId);
+        t.setTransactionType("WITHDRAWAL");
+        t.setAmount(amount);
+        t.setDescription(description);
+        t.setStatus("COMPLETED");
+        return transactionDAO.createTransaction(t);
+    }
 }

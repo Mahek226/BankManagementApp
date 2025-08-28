@@ -43,6 +43,10 @@ public class AccountService {
             account.getAccountNumber() == null || account.getAccountNumber().trim().isEmpty()) {
             return false;
         }
+        // enforce one account per type per user
+        if (accountDAO.existsAccountOfTypeForUser(account.getUserId(), account.getAccountType())) {
+            return false;
+        }
         return accountDAO.createAccount(account);
     }
     
@@ -80,5 +84,26 @@ public class AccountService {
             return false;
         }
         return accountDAO.deleteAccount(accountId);
+    }
+
+    public boolean deposit(int accountId, BigDecimal amount) throws SQLException {
+        if (accountId <= 0 || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+        Account account = accountDAO.getAccountById(accountId);
+        if (account == null) { return false; }
+        BigDecimal newBalance = account.getBalance().add(amount);
+        return accountDAO.updateBalance(accountId, newBalance);
+    }
+
+    public boolean withdraw(int accountId, BigDecimal amount) throws SQLException {
+        if (accountId <= 0 || amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+        Account account = accountDAO.getAccountById(accountId);
+        if (account == null) { return false; }
+        if (account.getBalance().compareTo(amount) < 0) { return false; }
+        BigDecimal newBalance = account.getBalance().subtract(amount);
+        return accountDAO.updateBalance(accountId, newBalance);
     }
 }

@@ -111,6 +111,17 @@ public class AccountDAO {
             return stmt.executeUpdate() > 0;
         }
     }
+
+    public boolean existsAccountOfTypeForUser(int userId, String accountType) throws SQLException {
+        String query = "SELECT 1 FROM accounts WHERE user_id = ? AND account_type = ? LIMIT 1";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setInt(1, userId);
+            stmt.setString(2, accountType);
+            ResultSet rs = stmt.executeQuery();
+            return rs.next();
+        }
+    }
     
     public String generateAccountNumber() throws SQLException {
         String query = "SELECT COUNT(*) as count FROM accounts";
