@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn" %>
 <%
     // Check if user is logged in
     if (session.getAttribute("user") == null) {
@@ -273,6 +274,16 @@
 
     <div class="container">
         <h1 class="page-title">Account Management</h1>
+        <div class="section" style="margin-top:-10px;margin-bottom:20px">
+            <div class="action-buttons">
+                <a href="#create" class="btn">Create Account</a>
+                <a href="#deposit" class="btn btn-secondary">Deposit</a>
+                <a href="#withdraw" class="btn btn-secondary">Withdraw</a>
+                <a href="#transfer" class="btn btn-secondary">Transfer</a>
+                <a href="#beneficiaries" class="btn btn-secondary">Beneficiaries</a>
+                <a href="#history" class="btn btn-secondary">Transaction History</a>
+            </div>
+        </div>
         
         <c:if test="${not empty sessionScope.successMessage}">
             <div class="message success-message">${sessionScope.successMessage}</div>
@@ -284,8 +295,16 @@
         </c:if>
 
         <!-- Create New Account Section -->
-        <div class="section">
+        <div class="section" id="create">
             <h3>Create New Account</h3>
+            <c:set var="hasSavings" value="false"/>
+            <c:set var="hasChecking" value="false"/>
+            <c:set var="hasFixed" value="false"/>
+            <c:forEach var="acc" items="${accounts}">
+                <c:if test="${acc.accountType == 'SAVINGS'}"><c:set var="hasSavings" value="true"/></c:if>
+                <c:if test="${acc.accountType == 'CHECKING'}"><c:set var="hasChecking" value="true"/></c:if>
+                <c:if test="${acc.accountType == 'FIXED_DEPOSIT'}"><c:set var="hasFixed" value="true"/></c:if>
+            </c:forEach>
             <form action="account" method="post">
                 <input type="hidden" name="action" value="create">
                 <div class="form-grid">
@@ -293,9 +312,9 @@
                         <label for="accountType">Account Type</label>
                         <select id="accountType" name="accountType" required>
                             <option value="">Select Account Type</option>
-                            <option value="SAVINGS">Savings Account</option>
-                            <option value="CHECKING">Checking Account</option>
-                            <option value="FIXED_DEPOSIT">Fixed Deposit</option>
+                            <c:if test="${!hasSavings}"><option value="SAVINGS">Savings Account</option></c:if>
+                            <c:if test="${!hasChecking}"><option value="CHECKING">Current/Checking Account</option></c:if>
+                            <c:if test="${!hasFixed}"><option value="FIXED_DEPOSIT">Fixed Deposit</option></c:if>
                         </select>
                     </div>
                                             <div class="form-group">
@@ -309,7 +328,7 @@
         </div>
 
         <!-- Transaction History & Analytics -->
-        <div class="section">
+        <div class="section" id="history">
             <h3>Transaction History</h3>
             <c:choose>
                 <c:when test="${empty transactionsDetailed}">

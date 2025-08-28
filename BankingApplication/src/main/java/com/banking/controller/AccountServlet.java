@@ -54,8 +54,25 @@ public class AccountServlet extends HttpServlet {
                 List<Account> allAccounts = accountService.getAllAccounts();
                 request.setAttribute("allAccounts", allAccounts);
             }
-            
-            request.getRequestDispatcher("accountManagement.jsp").forward(request, response);
+
+            String view = request.getParameter("view");
+            if (view == null || view.trim().isEmpty()) {
+                request.getRequestDispatcher("accountManagement.jsp").forward(request, response);
+            } else if ("create".equals(view)) {
+                request.getRequestDispatcher("createAccount.jsp").forward(request, response);
+            } else if ("deposit".equals(view)) {
+                request.getRequestDispatcher("deposit.jsp").forward(request, response);
+            } else if ("withdraw".equals(view)) {
+                request.getRequestDispatcher("withdraw.jsp").forward(request, response);
+            } else if ("transfer".equals(view)) {
+                request.getRequestDispatcher("transfer.jsp").forward(request, response);
+            } else if ("beneficiaries".equals(view)) {
+                request.getRequestDispatcher("beneficiaries.jsp").forward(request, response);
+            } else if ("history".equals(view)) {
+                request.getRequestDispatcher("history.jsp").forward(request, response);
+            } else {
+                request.getRequestDispatcher("accountManagement.jsp").forward(request, response);
+            }
         } catch (Exception e) {
             request.setAttribute("errorMessage", "Error loading accounts: " + e.getMessage());
             if ("ADMIN".equals(user.getRole())) {

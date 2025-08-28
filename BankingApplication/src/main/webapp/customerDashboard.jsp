@@ -250,7 +250,7 @@
                 <div class="card-icon">💰</div>
                 <h3 class="card-title">Fund Transfers</h3>
                 <p class="card-description">Transfer funds between accounts or to other customers securely.</p>
-                <a href="account" class="card-btn">Transfer Funds</a>
+                <a href="account?view=transfer" class="card-btn">Transfer Funds</a>
             </div>
 
             <div class="dashboard-card">
@@ -264,17 +264,17 @@
                 <div class="card-icon">📊</div>
                 <h3 class="card-title">Transaction History</h3>
                 <p class="card-description">View detailed transaction history and statements for all your accounts.</p>
-                <a href="account" class="card-btn">View History</a>
+                <a href="account?view=history" class="card-btn">View History</a>
             </div>
         </div>
 
         <div class="quick-actions">
             <h3>Quick Actions</h3>
             <div class="action-buttons">
-                <a href="account" class="action-btn">Create New Account</a>
+                <a href="account?view=create" class="action-btn">Create New Account</a>
                 <a href="account" class="action-btn">Check Balance</a>
                 <a href="loan" class="action-btn">Loan Status</a>
-                <a href="account" class="action-btn">Update Profile</a>
+                <a href="profile" class="action-btn">Update Profile</a>
             </div>
         </div>
     </div>
